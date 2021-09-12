@@ -1,45 +1,83 @@
-{
-  ;("icons")
-  ;[
-    {
-      src: "auto/assets/icons/icon_512x512.273935f8ebdc8218f2ce26daa11d6844.png",
-      sizes: "512x512",
-      type: "image/png",
-    },
-    {
-      src: "auto/assets/icons/icon_384x384.0b2a00b0b845312bc013ad85074b0753.png",
-      sizes: "384x384",
-      type: "image/png",
-    },
-    {
-      src: "auto/assets/icons/icon_256x256.1ca8f124ffadfb876c6933bc575d46dd.png",
-      sizes: "256x256",
-      type: "image/png",
-    },
-    {
-      src: "auto/assets/icons/icon_192x192.317079d2f38bc5d2906f5408114bbcd3.png",
-      sizes: "192x192",
-      type: "image/png",
-    },
-    {
-      src: "auto/assets/icons/icon_128x128.3d3683ece3cbf7afd56b9d4ebd823212.png",
-      sizes: "128x128",
-      type: "image/png",
-    },
-    {
-      src: "auto/assets/icons/icon_96x96.74b892b005aaab865730ec47e43273dd.png",
-      sizes: "96x96",
-      type: "image/png",
-    },
-  ],
-    "name"
-  "Budget Tracker", "short_name"
-  "Budget Tracker", "orientation"
-  "portrait", "display"
-  "standalone", "start_url"
-  "/", "description"
-  "An Application to track Expenses", "background_color"
-  "#01579b", "theme_color"
-  "#ffffff", "theme-color"
-  ;("#ffffff")
-}
+const FILES_TO_CACHE = [
+    './index.html',
+    './css/style.css',
+    './indexedDB.js',
+    './icons/icon-192x192.png',
+    './icons/icon-512x512.png',
+    './index.js',
+    './dist/bundle.js',
+    './dist/manifest.ee267344fd89602b675ae178e5e56eae.json',
+    'https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css',
+    './manifest.json',
+  ];
+  ​
+  const PRECACHE = 'precache-v1';
+  const RUNTIME = 'runtime';
+  ​
+  self.addEventListener('install', (event) => {
+    event.waitUntil(
+      caches
+        .open(PRECACHE)
+        .then((cache) => cache.addAll(FILES_TO_CACHE))
+        .then(self.skipWaiting())
+    );
+  });
+  ​
+  // The activate handler takes care of cleaning up old caches.
+  self.addEventListener('activate', (event) => {
+    const currentCaches = [PRECACHE, RUNTIME];
+    event.waitUntil(
+      caches
+        .keys()
+        .then((cacheNames) => {
+          return cacheNames.filter((cacheName) => !currentCaches.includes(cacheName));
+        })
+        .then((cachesToDelete) => {
+          return Promise.all(
+            cachesToDelete.map((cacheToDelete) => {
+              return caches.delete(cacheToDelete);
+            })
+          );
+        })
+        .then(() => self.clients.claim())
+        .catch(err => {
+          res.status(statusCode >= 100 && statusCode < 600 ? err.code : 500);
+        })
+    );
+  });
+  ​
+  ​
+  ​
+  self.addEventListener("fetch", function(evt) {
+    if (evt.request.url.includes("/api/")) {
+      evt.respondWith(
+        caches.open(RUNTIME).then(cache => {
+          return fetch(evt.request)
+            .then(response => {
+              // If the response was good, clone it and store it in the cache.
+              if (response.status === 200) {
+                cache.put(evt.request.url, response.clone());
+              }
+  ​
+              return response;
+            })
+            .catch(err => {
+              // Network request failed, try to get it from the cache.
+              return cache.match(evt.request);
+            });
+        }).catch(err => {
+          res.status(statusCode >= 100 && statusCode < 600 ? err.code : 500);
+        })
+      );
+  ​
+      return;
+    }
+  ​
+    evt.respondWith(
+      caches.open(PRECACHE).then(cache => {
+        return cache.match(evt.request).then(response => {
+          return response || fetch(evt.request);
+        });
+      })
+    );
+  });
