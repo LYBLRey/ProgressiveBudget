@@ -10,7 +10,6 @@ const FILES_TO_CACHE = [
     'https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css',
     './manifest.json',
   ];
-  ​
   const PRECACHE = 'precache-v1';
   const RUNTIME = 'runtime';
   ​
@@ -22,7 +21,6 @@ const FILES_TO_CACHE = [
         .then(self.skipWaiting())
     );
   });
-  ​
   // The activate handler takes care of cleaning up old caches.
   self.addEventListener('activate', (event) => {
     const currentCaches = [PRECACHE, RUNTIME];
@@ -45,9 +43,6 @@ const FILES_TO_CACHE = [
         })
     );
   });
-  ​
-  ​
-  ​
   self.addEventListener("fetch", function(evt) {
     if (evt.request.url.includes("/api/")) {
       evt.respondWith(
@@ -69,10 +64,8 @@ const FILES_TO_CACHE = [
           res.status(statusCode >= 100 && statusCode < 600 ? err.code : 500);
         })
       );
-  ​
       return;
     }
-  ​
     evt.respondWith(
       caches.open(PRECACHE).then(cache => {
         return cache.match(evt.request).then(response => {
